@@ -36,11 +36,11 @@ TGT = data.Field(tokenize=tokenize_en, init_token=BOS_WORD,
                  eos_token=EOS_WORD, pad_token=BLANK_WORD)
 
 if True:
-    spacy_de = spacy.load('fr')
+    spacy_de = spacy.load('de')
     spacy_en = spacy.load('en')
 
     MAX_LEN = 100
-    train, val, test = datasets.IWSLT.splits(exts=('.fr', '.en'), fields=(SRC, TGT),
+    train, val, test = datasets.IWSLT.splits(exts=('.de', '.en'), fields=(SRC, TGT),
                                              filter_pred=lambda x: len(vars(x)['src']) <= MAX_LEN and len(
                                                  vars(x)['trg']) <= MAX_LEN)
 
