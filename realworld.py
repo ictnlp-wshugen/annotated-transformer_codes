@@ -16,7 +16,7 @@ from transformer.noam_opt import NoamOpt
 # Note: not runnable for data reason (the data archive is missing) !!!
 
 # GPUs to use
-devices = [0, 1]
+devices = [0]  # Or use [0, 1] etc for multiple GPUs
 
 BOS_WORD = '<s>'
 EOS_WORD = '</s>'
@@ -36,11 +36,11 @@ TGT = data.Field(tokenize=tokenize_en, init_token=BOS_WORD,
                  eos_token=EOS_WORD, pad_token=BLANK_WORD)
 
 if True:
-    spacy_de = spacy.load('de')
+    spacy_de = spacy.load('fr')
     spacy_en = spacy.load('en')
 
     MAX_LEN = 100
-    train, val, test = datasets.IWSLT.splits(exts=('.de', 'en'), fields=(SRC, TGT),
+    train, val, test = datasets.IWSLT.splits(exts=('.fr', '.en'), fields=(SRC, TGT),
                                              filter_pred=lambda x: len(vars(x)['src']) <= MAX_LEN and len(
                                                  vars(x)['trg']) <= MAX_LEN)
 
@@ -53,7 +53,7 @@ if True:
     model.cuda()
     criterion = LabelSmoothing(size=len(TGT.vocab), padding_idx=pad_idx, smoothing=0.1)
     criterion.cuda()
-    BATCH_SIZE = 12000
+    BATCH_SIZE = 600  # Was 12000, but I only have 12 GB RAM on my single GPU.
     train_iter = MyIterator(train, batch_size=BATCH_SIZE, device=0, repeat=False,
                             sort_key=lambda x: (len(x.src), len(x.trg)), batch_size_fn=batch_size_fn, train=True)
     valid_iter = MyIterator(val, batch_size=BATCH_SIZE, device=0, repeat=False,
