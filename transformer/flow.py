@@ -68,7 +68,7 @@ max_src_in_batch = 25000
 max_tgt_in_batch = 25000
 
 
-def batch_size_fn(new, count):
+def batch_size_fn(new, count, size_so_far):
     """
     Keep augmenting batch and calculate total number of tokens + padding.
     """

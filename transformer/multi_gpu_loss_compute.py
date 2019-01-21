@@ -35,14 +35,18 @@ class MultiGPULossCompute(object):
             gen = nn.parallel.parallel_apply(generator, out_column)
 
             # Compute loss.
-            y = [(g.contigous().view(-1, g.size(-1)), t[:, i:i + chunk_size].contigous().view(-1)) for g, t in
+            y = [(g.contiguous().view(-1, g.size(-1)), t[:, i:i + chunk_size].contiguous().view(-1)) for g, t in
                  zip(gen, targets)]
             loss = nn.parallel.parallel_apply(self.criterion, y)
 
             # Sum and normalize loss
             l = nn.parallel.gather(loss, target_device=self.devices[0])
-            l = l.sum()[0] / normalize
-            total += l.data[0]
+            l = l.sum()
+            if l.shape == torch.Size([]):  # handle 1 GPU case
+                total += l.item() / normalize
+            else:
+                l = l[0] / normalize  
+                total += l.data[0]
 
             # Backprop loss to output of transformer
             if self.opt is not None:
