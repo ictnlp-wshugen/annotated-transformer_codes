@@ -13,8 +13,6 @@ from transformer.multi_gpu_loss_compute import MultiGPULossCompute
 from transformer.my_iterator import MyIterator, rebatch
 from transformer.noam_opt import NoamOpt
 
-# Note: not runnable for data reason (the data archive is missing) !!!
-
 # GPUs to use
 devices = [0]  # Or use [0, 1] etc for multiple GPUs
 
