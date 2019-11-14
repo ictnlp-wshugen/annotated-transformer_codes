@@ -13,8 +13,12 @@ class MultiGPULossCompute(object):
 
     def __init__(self, generator, criterion, devices, opt=None, chunk_size=5):
         # Send out to different gpus.
-        self.criteria = [nn.parallel.replicate(criterion, devices=devices[:i + 1]) for i in range(len(devices))]
-        self.generators = [nn.parallel.replicate(generator, devices=devices[:i + 1]) for i in range(len(devices))]
+        self.criterion = criterion
+        self.generator = generator
+        self.criteria = [None for _ in range(len(devices) - 1)] \
+                        + [nn.parallel.replicate(criterion, devices=devices)]
+        self.generators = [None for _ in range(len(devices) - 1)] \
+                          + [nn.parallel.replicate(generator, devices=devices)]
 
         self.opt = opt
         self.devices = devices
@@ -26,6 +30,7 @@ class MultiGPULossCompute(object):
         out_grad = [[] for _ in out_scatter]
         targets = nn.parallel.scatter(target, target_gpus=self.devices)
 
+        self.replicate_modules(len(out_scatter))
         generator = self.generators[len(out_scatter) - 1]
         criterion = self.criteria[len(out_scatter) - 1]
 
@@ -67,3 +72,10 @@ class MultiGPULossCompute(object):
             self.opt.optimizer.zero_grad()
 
         return total * normalize
+
+    def replicate_modules(self, var_length):
+        if var_length != len(self.devices):
+            idx = var_length - 1
+            if not self.criteria[idx] or not self.generators[idx]:
+                self.criteria[idx] = nn.parallel.replicate(self.criterion, devices=self.devices[:var_length])
+                self.generators[idx] = nn.parallel.replicate(self.generator, devices=self.devices[:var_length])
